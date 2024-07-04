@@ -23,6 +23,7 @@ print(songs.describe())
 
 print(songs['Pandora Track Stations'])
 
+print(songs['Spotify Popularity'])
 ### Univariate Analysis - outliers detection in numerical features
 
 num_cols = ['Track Score', 'Spotify Popularity', 'Apple Music Playlist Count', 'Deezer Playlist Count', 'Amazon Playlist Count']
@@ -51,11 +52,17 @@ songs.drop_duplicates(subset=['Track'], inplace=True)
 print(songs['Track'].duplicated().sum())
 
 ## Top 10 tracks on Different Platforms 
+    ## Top 10 Tracks by Popularity on Spotify
+top_10_popular_spotify = songs.sort_values('Spotify Popularity', ascending=False)
+sns.barplot(top_10_popular_spotify.head(10), x= 'Track', y='Spotify Popularity', palette='rainbow')
+plt.title("Top 10 Tracks By Spotify Popularity")
+plt.xticks(rotation=60)
+plt.show()
 
 for col in cols_to_convert:
     songs.sort_values(col, ascending=False, inplace=True)
     top_10 = songs[['Track',col]].reset_index()
-    print(f"Top 10 Tracks - {col}",top_10['Track'].head(10))
+    #print(f"Top 10 Tracks - {col}",top_10['Track'].head(10))
 
     plt.figure(figsize=(12,8))
     sns.barplot(top_10.head(10), x = 'Track', y = col, palette= 'rainbow')
