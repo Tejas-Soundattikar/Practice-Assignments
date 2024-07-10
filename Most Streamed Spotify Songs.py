@@ -34,7 +34,7 @@ for i in num_cols:
     plt.show()
 
 
-## Dividing the Columns by 1000.
+## Converinng the values in Columns in millions.
 
 cols_to_convert = ['Spotify Streams', 'Spotify Playlist Count', 'Spotify Playlist Reach', 'YouTube Views', 'YouTube Likes', 'TikTok Posts', 'TikTok Likes', 'TikTok Views',
                    'YouTube Playlist Reach','Apple Music Playlist Count', 'AirPlay Spins', 'SiriusXM Spins','Deezer Playlist Reach','Deezer Playlist Count','Amazon Playlist Count', 
@@ -43,9 +43,9 @@ cols_to_convert = ['Spotify Streams', 'Spotify Playlist Count', 'Spotify Playlis
 
 for col in cols_to_convert:
     songs[col] = songs[col].apply(lambda x: str(x).replace(",",""))
-    songs[col] = songs[col].astype(float) / 1000
+    songs[col] = round(songs[col].astype('Float64') / 1000000,2)
     
-    
+
 ## Checking for the duplicate tracks and dopping them
 
 print(songs['Track'].duplicated().sum())
@@ -100,4 +100,31 @@ for col in cols_to_convert:
     plt.show()
 
 
-## Analyzing How the Popularity of Songs Changes Over Time
+## Platform Comparison
+
+songs['All Time Rank'] = songs['All Time Rank'].apply(lambda x: str(x).replace(",", ""))
+songs['All Time Rank'] = songs['All Time Rank'].astype("int")
+songs.sort_values('All Time Rank',ascending= True ,inplace = True)
+cols = ['Track','Spotify Streams', 'YouTube Views', 'TikTok Views']
+top_10 = songs[cols].head(10)
+top_10['YouTube Views'].fillna(0, inplace=True)
+top_10['TikTok Views'].fillna(0, inplace=True)
+
+top_10_melted =top_10[cols].melt(id_vars=['Track'], value_vars=['Spotify Streams', 'YouTube Views', 'TikTok Views'], var_name= 'Platform', value_name='Streams')
+
+sns.barplot(data=top_10_melted, x='Track', y ='Streams', hue='Platform')
+plt.title('Comparison of Song Popularity Across Platforms')
+plt.xlabel("Track Name")
+plt.ylabel("Streams")
+plt.xticks(rotation = 45)
+plt.legend(title='Platforms')
+plt.show()
+
+plt.barh(top_10['Track'], top_10['Spotify Streams'], label = 'Spotify Streams', color = 'b')
+plt.barh(top_10['Track'], top_10['YouTube Views'], left=top_10['Spotify Streams'], label = 'YouTube Views', color = 'r')
+plt.barh(top_10['Track'], top_10['TikTok Views'], left=top_10['Spotify Streams'] + top_10['YouTube Views'], label = 'TikTok Views', color = 'g')
+
+plt.xlabel('Track Name')
+plt.ylabel("Popularity")
+plt.legend()
+plt.show()
