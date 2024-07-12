@@ -8,7 +8,7 @@ try:
     songs = pd.read_csv(path, encoding='latin1')
 except UnicodeDecodeError:
     songs = pd.read_csv(path, encoding='iso-8859-1')
-
+    
 print(songs.head())
 print(songs.shape)
 print(songs.dtypes)
@@ -26,14 +26,14 @@ songs['Release Month'] = songs['Release Date'].dt.month
 songs['Release Year'] = songs['Release Date'].dt.year
 
 ### Univariate Analysis - outliers detection in numerical features
-'''
+
 num_cols = ['Track Score', 'Spotify Popularity', 'Apple Music Playlist Count', 'Deezer Playlist Count', 'Amazon Playlist Count']
 for i in num_cols:
     sns.boxplot(data = songs[i])
     plt.title(f"Outliers for {i}")
     plt.show()
 
-'''
+
 ## Converinng the values in Columns in millions.
 
 cols_to_convert = ['Spotify Streams', 'Spotify Playlist Reach', 'YouTube Views', 'YouTube Likes', 'TikTok Likes', 'TikTok Views',
@@ -45,7 +45,7 @@ for col in cols_to_convert:
     songs[col] = songs[col].apply(lambda x: str(x).replace(",",""))
     songs[col] = round(songs[col].astype('Float64') / 1000000,2)
     
-'''
+
 ## Checking for the duplicate tracks and dopping them
 
 print(songs['Track'].duplicated().sum())
@@ -91,7 +91,7 @@ plt.show()
 for col in cols_to_convert:
     songs.sort_values(col, ascending=False, inplace=True)
     top_10 = songs[['Track',col]].reset_index()
-    #print(f"Top 10 Tracks - {col}",top_10['Track'].head(10))
+    print(f"Top 10 Tracks - {col}",top_10['Track'].head(10))
 
     plt.figure(figsize=(12,8))
     sns.barplot(top_10.head(10), x = 'Track', y = col, palette= 'rainbow')
@@ -160,40 +160,43 @@ for col in cols:
 
 
 ## Playlist Analysis
-playlist_cols = ['Track','Spotify Playlist Count', 'YouTube Playlist Reach', 'Spotify Streams', 'YouTube Views', 'TikTok Views']
+playlist_columns = ['Track', 'Spotify Playlist Count', 'YouTube Playlist Reach', 'Spotify Streams', 'YouTube Views', 'TikTok Views']
 
-for col in playlist_cols[1:]:
+for col in playlist_columns:
     songs[col] = pd.to_numeric(songs[col], errors='coerce')
 
-cleaned = songs.dropna(subset=playlist_cols[1:])
+# Drop rows with NaN values
+df_cleaned_tiktok = songs.dropna(subset=playlist_columns)
+# Correlation analysis between playlist inclusion and song popularity
+playlist_popularity_corr = songs[playlist_columns].corr()
 
-playlist_popularity_corr = cleaned[playlist_cols[1:]].corr()
+# Display correlation matrix
+print("Correlation Matrix:")
 print(playlist_popularity_corr)
 
-## Heatmap of Correlation Matrix
-plt.figure(figsize=(14,10))
-sns.heatmap(playlist_popularity_corr, annot=True, cmap='coolwarm', vmin= -1, vmax=1)
+# Plot heatmap of the correlation matrix
+plt.figure(figsize=(10, 6))
+sns.heatmap(playlist_popularity_corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
 plt.title('Correlation Between Playlist Inclusion and Song Popularity')
 plt.show()
 
-
-## Scatterplot to visualize the relationship between playlist counts and streams/views
-plt.figure(figsize=(14,10))
+# Scatter plot to visualize the relationship between playlist counts and streams/views
+plt.figure(figsize=(14, 7))
 plt.subplot(1, 2, 1)
-sns.scatterplot(data=cleaned, x='Spotify Playlist Count', y='Spotify Streams')
+sns.scatterplot(data=songs, x='Spotify Playlist Count', y='Spotify Streams')
 plt.title('Spotify Playlist Count vs Spotify Streams')
 plt.xlabel('Spotify Playlist Count')
 plt.ylabel('Spotify Streams')
 
 plt.subplot(1, 2, 2)
-sns.scatterplot(data=cleaned, x='YouTube Playlist Reach', y='YouTube Views')
+sns.scatterplot(data=songs, x='YouTube Playlist Reach', y='YouTube Views')
 plt.title('YouTube Playlist Reach vs YouTube Views')
 plt.xlabel('YouTube Playlist Reach')
 plt.ylabel('YouTube Views')
 
 plt.tight_layout()
 plt.show()
-'''
+
 
 
 ### Analysing the Influence of TikTok Posts on Song Popularity
