@@ -43,7 +43,7 @@ cols_to_convert = ['Spotify Streams', 'Spotify Playlist Reach', 'YouTube Views',
 
 for col in cols_to_convert:
     songs[col] = songs[col].apply(lambda x: str(x).replace(",",""))
-    songs[col] = round(songs[col].astype('Float64') / 1000000,2)
+    songs[col] = round(songs[col].astype('Float64') / 1000,2)
     
 
 ## Checking for the duplicate tracks and dopping them
@@ -55,16 +55,21 @@ print(songs['Track'].duplicated().sum())
 
 ## Checking the Distribution
     ## Release Date Distribution
-sns.histplot(songs['Release Date'], kde=True, bins = 10)
+relesase_date_distribution_plot = sns.histplot(songs['Release Date'], kde=True, bins = 10)
+for i in relesase_date_distribution_plot.containers:
+   relesase_date_distribution_plot.bar_label(i,)
 plt.title("Distribution of Songs by Release Date")
 plt.xlabel("Release Date")
 plt.ylabel("Number of Songs")
 plt.show()
 
+
     ## Release Month Distribution
 month_distr = songs.groupby('Release Month')['Track'].count().reset_index()
 print(month_distr)
-sns.barplot(x = month_distr['Release Month'], y = month_distr['Track'], palette= 'coolwarm')
+release_month_distribution_plot = sns.barplot(x = month_distr['Release Month'], y = month_distr['Track'], palette= 'coolwarm')
+for i in release_month_distribution_plot.containers:
+    release_month_distribution_plot.bar_label(i,)
 plt.title("Distribution of Songs by Release Month")
 plt.xlabel("Release Month")
 plt.ylabel("Number of Songs")
@@ -72,7 +77,9 @@ plt.show()
 
     ## Artist Distribution - Top 20 Artists
 top_artist = songs['Artist'].value_counts().head(20)
-sns.barplot(x=top_artist.values, y = top_artist.index, palette='vlag')
+artist_distribution_plot = sns.barplot(x=top_artist.values, y = top_artist.index, palette='vlag')
+for i in artist_distribution_plot.containers:
+    artist_distribution_plot.bar_label(i,)
 plt.title("Top 20 Artists by Number of Songs")
 plt.xlabel("Number of Songs")
 plt.ylabel("Artist")
@@ -83,21 +90,34 @@ plt.show()
 ## Top 10 tracks on Different Platforms 
     ## Top 10 Tracks by Popularity on Spotify
 top_10_popular_spotify = songs.sort_values('Spotify Popularity', ascending=False)
-sns.barplot(top_10_popular_spotify.head(10), x= 'Track', y='Spotify Popularity', palette='rainbow')
+spotify_top_10_plot = sns.barplot(top_10_popular_spotify.head(10), x= 'Track', y='Spotify Popularity', palette='rainbow')
+for i in spotify_top_10_plot.containers:
+    spotify_top_10_plot.bar_label(i,)
 plt.title("Top 10 Tracks By Spotify Popularity")
 plt.xticks(rotation=60)
 plt.show()
 
-for col in cols_to_convert:
-    songs.sort_values(col, ascending=False, inplace=True)
-    top_10 = songs[['Track',col]].reset_index()
-    print(f"Top 10 Tracks - {col}",top_10['Track'].head(10))
+    ## Top 10 Tracks on different platforms by views
+view_cols = ['Spotify Streams', 'YouTube Views', 'YouTube Likes', 'TikTok Views']
 
-    plt.figure(figsize=(12,8))
-    sns.barplot(top_10.head(10), x = 'Track', y = col, palette= 'rainbow')
-    plt.xticks(rotation = 60)
-    plt.title(f"Top 10 Tracks - {col}")
+for col in view_cols:
+    songs[col] = songs[col].apply(lambda x: str(x).replace(",",""))
+    songs[col] = round(songs[col].astype('Float64') / 1000,2)
+
+    
+    top_10 = songs[['Track', col]].nlargest(10, col)
+    print(top_10)
+
+    plt.figure(figsize=(14,10))
+    plot = sns.barplot(data=top_10, x='Track', y= col, palette='rainbow')
+    for i in plot.containers:
+        plot.bar_label(i,)
+    plt.xlabel('Track Name')
+    plt.xticks(rotation = 45)
+    plt.ylabel(f"{col} Count")
+    plt.title(f"Top 10 Tracks by {col} Count")
     plt.show()
+
 
 
 ## Platform Comparison
@@ -112,7 +132,9 @@ top_10['TikTok Views'].fillna(0, inplace=True)
 
 top_10_melted =top_10[cols].melt(id_vars=['Track'], value_vars=['Spotify Streams', 'YouTube Views', 'TikTok Views'], var_name= 'Platform', value_name='Streams')
 
-sns.barplot(data=top_10_melted, x='Track', y ='Streams', hue='Platform')
+platform_comparison_plot = sns.barplot(data=top_10_melted, x='Track', y ='Streams', hue='Platform')
+for i in platform_comparison_plot.containers:
+    platform_comparison_plot.bar_label(i,)
 plt.title('Comparison of Song Popularity Across Platforms')
 plt.xlabel("Track Name")
 plt.ylabel("Streams")
@@ -138,7 +160,9 @@ for col in cols:
     top_10_artist = top_10.nlargest(10, col)
     
     plt.figure(figsize=(12,8))
-    sns.barplot(data=top_10_artist, x = 'Artist', y=col, palette= 'viridis')
+    top_10_plot = sns.barplot(data=top_10_artist, x = 'Artist', y=col, palette= 'viridis')
+    for i in top_10_plot.containers:
+        top_10_plot.bar_label(i,)
     plt.xlabel("Artist")
     plt.ylabel("Streams")
     plt.title(f"Top 10 Artist by {col}")
@@ -151,7 +175,9 @@ for col in cols:
     top_10_albums = top_albums.nlargest(10, col)
     
     plt.figure(figsize=(14,10))
-    sns.barplot(data=top_10_albums, x= 'Album Name', y= col, palette='Spectral')
+    top_10_album_plot = sns.barplot(data=top_10_albums, x= 'Album Name', y= col, palette='Spectral')
+    for i in top_10_album_plot.containers:
+        top_10_album_plot.bar_label(i,)
     plt.xlabel("Album Name")
     plt.ylabel("Streams")
     plt.title(f"Top 10 Albums by {col}")
@@ -288,3 +314,60 @@ plt.ylabel('Spotify Streams')
 
 plt.tight_layout()
 plt.show()
+
+
+
+## User Engagement Analysis
+engagement_columns = ['YouTube Likes', 'TikTok Likes', 'Shazam Counts', 'Spotify Streams', 'YouTube Views', 'Spotify Popularity']
+
+# Convert columns to numeric, forcing errors to NaN
+for col in engagement_columns:
+    songs[col] = pd.to_numeric(songs[col], errors='coerce')
+
+# Drop rows with NaN values
+songs_cleaned_engagement = songs[engagement_columns].dropna().copy()
+
+# Correlation analysis between engagement metrics and streaming/popularity scores
+engagement_corr = songs_cleaned_engagement.corr()
+
+# Display correlation matrix
+print("Correlation Matrix for Engagement Metrics:")
+print(engagement_corr)
+
+# Plot heatmap of the correlation matrix
+plt.figure(figsize=(10, 6))
+sns.heatmap(engagement_corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+plt.title('Correlation Between Engagement Metrics and Streaming/Popularity')
+plt.show()
+
+
+# Scatter plots to visualize the relationship between engagement metrics and streaming/popularity
+plt.figure(figsize=(18, 12))
+
+plt.subplot(2, 2, 1)
+sns.scatterplot(data=songs_cleaned_engagement, x='YouTube Likes', y='Spotify Streams')
+plt.title('YouTube Likes vs Spotify Streams')
+plt.xlabel('YouTube Likes')
+plt.ylabel('Spotify Streams')
+
+plt.subplot(2, 2, 2)
+sns.scatterplot(data=songs_cleaned_engagement, x='TikTok Likes', y='Spotify Streams')
+plt.title('TikTok Likes vs Spotify Streams')
+plt.xlabel('TikTok Likes')
+plt.ylabel('Spotify Streams')
+
+plt.subplot(2, 2, 3)
+sns.scatterplot(data=songs_cleaned_engagement, x='Shazam Counts', y='Spotify Streams')
+plt.title('Shazam Counts vs Spotify Streams')
+plt.xlabel('Shazam Counts')
+plt.ylabel('Spotify Streams')
+
+plt.subplot(2, 2, 4)
+sns.scatterplot(data=songs_cleaned_engagement, x='Shazam Counts', y='Spotify Popularity')
+plt.title('Shazam Counts vs Spotify Popularity')
+plt.xlabel('Shazam Counts')
+plt.ylabel('Spotify Popularity')
+
+plt.tight_layout()
+plt.show()
+
